@@ -7,7 +7,9 @@ encodes to the same Avro schema, and publishes to the same kind of Kafka
 topic - existing NiFi/Druid consumers downstream don't need to change.
 
 For day-to-day schema/mapping/output editing, see
-**[docs/admin-ui-guide.md](docs/admin-ui-guide.md)**. For a side-by-side
+**[docs/admin-ui-guide.md](docs/admin-ui-guide.md)**. For how to actually
+instrument a website with the tracking tag, see
+**[docs/tracking-tag.md](docs/tracking-tag.md)**. For a side-by-side
 comparison against the original Java server, see
 **[docs/legacy-vs-nextgen.md](docs/legacy-vs-nextgen.md)**. This document
 covers architecture, deployment, and the supporting tooling.
