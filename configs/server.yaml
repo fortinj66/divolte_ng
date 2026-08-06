@@ -1,0 +1,56 @@
+# Bootstrap config for divolte-collector. See configs/example/ for a small
+# synthetic schema/mapping to get started - point schema_file/mapping_file
+# at your own real schema/mapping for actual production use.
+listen_addr: ":8290"
+prefix: "/webstats/"
+script_name: "divolte_ng.js"
+event_suffix: "csc-event"
+
+schema_file: "configs/example/schema.avsc"
+mapping_file: "configs/example/mapping.yaml"
+
+kafka:
+  # Overridable via DIVOLTE_KAFKA_BROKER_LIST (comma-separated) / DIVOLTE_KAFKA_CLIENT_ID.
+  brokers:
+    - "localhost:9092"
+  client_id: "divolte.collector"
+  topic: "divolte_example_event"
+
+workers: 4
+queue_size: 10000
+duplicate_memory_size: 1000000
+
+admin:
+  listen_addr: ":8291"
+  # Shared MariaDB/MySQL database backing the schema/mapping store - every
+  # instance points at the SAME database (see internal/config's DBConfig
+  # doc comment). Set the password via DIVOLTE_DB_PASSWORD in real
+  # deployments rather than here.
+  db:
+    host: "localhost"
+    port: 3306
+    name: "divolte_config"
+    username: "divolte"
+    password: "change-me"
+  username: "admin"
+  # Set via DIVOLTE_ADMIN_PASSWORD in real deployments rather than here.
+  password: "change-me"
+  schema_namespace: "com.example.divolte.record"
+  schema_record_name: "example_event"
+  # Optional: Active Directory login as an ADDITIONAL way into the admin
+  # UI alongside the shared username/password above - either credential
+  # set works. Disabled by default (enabled: false). This ALWAYS requires
+  # allowed_groups to be non-empty when enabled - see internal/ldapauth's
+  # package doc for why. Set manager_password via DIVOLTE_LDAP_BIND_PASSWORD
+  # in real deployments rather than here.
+  ldap:
+    enabled: false
+    servers:
+      - "ldap://ldap1.example.com"
+      - "ldap://ldap2.example.com"
+    manager_dn: "CN=svc-account,OU=Service Accounts,DC=example,DC=com"
+    manager_password: "change-me"
+    user_search_base: "DC=example,DC=com"
+    user_search_filter: "sAMAccountName={0}"
+    allowed_groups:
+      - "admins"

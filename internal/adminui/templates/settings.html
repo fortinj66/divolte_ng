@@ -1,0 +1,202 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Divolte Collector - Settings</title>
+  <link rel="icon" type="image/x-icon" href="{{.URIPrefix}}/static/favicon.ico">
+  <style>
+    :root {
+      --accent: #00a7ca; --accent-hover: #00889f; --accent-bg: #e6f8fb;
+      --green-hover: #15803d; --red: #dc2626; --red-bg: #fef2f2;
+      --border: #e2e2e7; --text: #231f20; --muted: #6b7280; --bg: #f4f5f7; --card: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg); color: var(--text); margin: 0; padding: 2rem 1.5rem 2.5rem;
+    }
+    .page { max-width: 560px; margin: 0 auto; }
+    .brandbar {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding-bottom: 1rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border);
+    }
+    .brandbar img.logo { height: 22px; width: auto; display: block; }
+    .brandbar .divider { width: 1px; height: 20px; background: var(--border); }
+    .brandbar .app-name { font-size: 0.95rem; font-weight: 600; color: var(--muted); }
+    h1 { font-size: 1.3rem; margin: 0 0 0.3rem; }
+    .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.25rem; }
+    .flash { padding: 0.7rem 1rem; margin-bottom: 1.25rem; border-radius: 8px; font-size: 0.88rem; border: 1px solid transparent; }
+    .flash.ok { background: #f0fdf4; color: var(--green-hover); border-color: #bbf7d0; }
+    .flash.err { background: var(--red-bg); color: var(--red); border-color: #fecaca; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; }
+    label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--muted); margin: 1rem 0 0.35rem; }
+    label:first-child { margin-top: 0; }
+    input[type=text], input[type=password] {
+      width: 100%; padding: 0.55rem 0.7rem; font-size: 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--text);
+    }
+    input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+    .hint { color: var(--muted); font-size: 0.78rem; margin-top: 0.35rem; }
+    button.save-btn {
+      margin-top: 1.5rem; background: var(--accent); color: white; border: none; padding: 0.6rem 1.3rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+    }
+    button.save-btn:hover { background: var(--accent-hover); }
+    button.test-btn {
+      margin-top: 1rem; background: #fff; border: 1px solid var(--border); color: var(--text);
+      padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 500;
+    }
+    button.test-btn:hover:not(:disabled) { background: #f9fafb; }
+    button.test-btn:disabled { color: #c4c6cc; cursor: not-allowed; }
+    #ldap-test-result { margin-top: 0.5rem; font-size: 0.82rem; }
+    #ldap-test-result.ok { color: var(--green-hover); }
+    #ldap-test-result.err { color: var(--red); }
+    a.back-link { display: inline-block; margin-top: 1.25rem; margin-right: 1.25rem; color: var(--accent-hover); font-size: 0.85rem; text-decoration: none; }
+    a.back-link:hover { text-decoration: underline; }
+    .section-divider { border: none; border-top: 1px solid var(--border); margin: 1.75rem 0 1.25rem; }
+    .section-title { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.25rem; }
+    .checkbox-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; }
+    .checkbox-row input[type=checkbox] { width: 16px; height: 16px; }
+    .checkbox-row label { margin: 0; font-size: 0.88rem; font-weight: 500; color: var(--text); }
+    textarea {
+      width: 100%; padding: 0.55rem 0.7rem; font-size: 0.85rem; font-family: var(--mono, monospace);
+      border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--text);
+      resize: vertical; min-height: 4.5rem;
+    }
+    textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+    .target-links { display: flex; flex-direction: column; gap: 0.6rem; }
+    a.target-link {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); text-decoration: none; font-size: 0.9rem; font-weight: 500;
+    }
+    a.target-link:hover { background: #f9fafb; }
+    a.target-link .arrow { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="brandbar">
+      <img class="logo" src="{{.URIPrefix}}/static/logo.svg" alt="Divolte Collector">
+      <div class="divider"></div>
+      <div class="app-name">Divolte Collector &middot; Settings</div>
+    </div>
+
+    <h1>Instance settings</h1>
+    <div class="subtitle">Shared across every Divolte instance pointed at this database - changing these here changes them everywhere.</div>
+
+    {{if .Flash}}<div class="flash {{.FlashClass}}">{{.Flash}}</div>{{end}}
+
+    <div class="card">
+      <form method="post" action="{{.URIPrefix}}/settings">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+
+        <label for="username">Admin username</label>
+        <input type="text" id="username" name="username" value="{{.Username}}" autocomplete="off">
+
+        <label for="password">Admin password</label>
+        <input type="password" id="password" name="password" placeholder="leave blank to keep the current password" autocomplete="new-password">
+        <div class="hint">Blank means do not change the password.</div>
+
+        <label for="primary_url">Primary admin URL</label>
+        <input type="text" id="primary_url" name="primary_url" value="{{.PrimaryURL}}" placeholder="https://collector-01.example.com/admin">
+        <div class="hint">When set, visiting any instance's admin UI redirects here instead - leave blank to disable.</div>
+
+        <hr class="section-divider">
+        <div class="section-title">LDAP / Active Directory login (optional)</div>
+        <div class="hint">An additional way in alongside the admin login above - either one works. Requires at least one allowed group; this UI can edit live schema/mapping, so it never authenticates without a group restriction.</div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="ldap_enabled" name="ldap_enabled" {{if .LDAPEnabled}}checked{{end}}>
+          <label for="ldap_enabled">Enable LDAP login</label>
+        </div>
+
+        <label for="ldap_servers">LDAP servers (one per line)</label>
+        <textarea id="ldap_servers" name="ldap_servers" placeholder="ldap://ldap1.example.com&#10;ldap://ldap2.example.com">{{.LDAPServers}}</textarea>
+
+        <label for="ldap_manager_dn">Service account DN</label>
+        <input type="text" id="ldap_manager_dn" name="ldap_manager_dn" value="{{.LDAPManagerDN}}" placeholder="CN=svc-account,OU=Service Accounts,DC=example,DC=com">
+
+        <label for="ldap_manager_password">Service account password</label>
+        <input type="password" id="ldap_manager_password" name="ldap_manager_password" placeholder="leave blank to keep the current password" autocomplete="new-password">
+        <div class="hint">Blank means do not change the password.</div>
+
+        <label for="ldap_user_search_base">User search base</label>
+        <input type="text" id="ldap_user_search_base" name="ldap_user_search_base" value="{{.LDAPUserSearchBase}}" placeholder="DC=example,DC=com">
+
+        <label for="ldap_user_search_filter">User search filter</label>
+        <input type="text" id="ldap_user_search_filter" name="ldap_user_search_filter" value="{{.LDAPUserSearchFilter}}" placeholder="sAMAccountName={0}">
+
+        <label for="ldap_allowed_groups">Allowed groups (one per line, CN or full DN)</label>
+        <textarea id="ldap_allowed_groups" name="ldap_allowed_groups" placeholder="admins">{{.LDAPAllowedGroups}}</textarea>
+
+        <button class="test-btn" type="button" id="ldap-test-btn">Test LDAP connection</button>
+        <div id="ldap-test-result"></div>
+
+        <button class="save-btn" type="submit">Save settings</button>
+      </form>
+    </div>
+
+    <hr class="section-divider">
+    <div class="section-title">Schema sync targets</div>
+    <div class="hint" style="margin-bottom: 0.75rem;">Publish pushes the new schema to every ENABLED target below - there can be more than one of each kind (e.g. nifi-01 and nifi-02 are separate NiFi clusters; dev and prod are separate Druid clusters), each reported independently.</div>
+    <div class="target-links">
+      <a class="target-link" href="{{.URIPrefix}}/nifi-targets">NiFi targets <span class="arrow">&rarr;</span></a>
+      <a class="target-link" href="{{.URIPrefix}}/druid-targets">Druid targets <span class="arrow">&rarr;</span></a>
+    </div>
+
+    <hr class="section-divider">
+    <div class="section-title">Kafka output targets</div>
+    <div class="hint" style="margin-bottom: 0.75rem;">Every ENABLED target receives every incoming event, live - independent of Publish, there can be more than one target per format (Avro/JSON).</div>
+    <div class="target-links">
+      <a class="target-link" href="{{.URIPrefix}}/kafka-targets">Kafka output targets <span class="arrow">&rarr;</span></a>
+    </div>
+
+    <a class="back-link" href="{{.URIPrefix}}/logout">Log out</a>
+    <a class="back-link" href="{{.URIPrefix}}/">Back to fields</a>
+  </div>
+
+  <script>
+    // Tests the CURRENTLY TYPED form values (not necessarily saved yet)
+    // against the real directory, via the service account bind + a
+    // per-group DN lookup - shown inline so an admin can iterate on the
+    // config without a full page reload/save each time.
+    (function() {
+      var btn = document.getElementById('ldap-test-btn');
+      var result = document.getElementById('ldap-test-result');
+
+      btn.addEventListener('click', function() {
+        btn.disabled = true;
+        result.className = '';
+        result.textContent = 'Testing...';
+
+        var body = new URLSearchParams();
+        body.set('ldap_servers', document.getElementById('ldap_servers').value);
+        body.set('ldap_manager_dn', document.getElementById('ldap_manager_dn').value);
+        body.set('ldap_manager_password', document.getElementById('ldap_manager_password').value);
+        body.set('ldap_user_search_base', document.getElementById('ldap_user_search_base').value);
+        body.set('ldap_user_search_filter', document.getElementById('ldap_user_search_filter').value);
+        body.set('ldap_allowed_groups', document.getElementById('ldap_allowed_groups').value);
+
+        fetch('{{.URIPrefix}}/settings/test-ldap', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': {{.CSRFToken}}
+          },
+          body: body.toString()
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          result.className = data.ok ? 'ok' : 'err';
+          result.textContent = data.message;
+        }).catch(function(err) {
+          result.className = 'err';
+          result.textContent = 'Test request failed: ' + err;
+        }).finally(function() {
+          btn.disabled = false;
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

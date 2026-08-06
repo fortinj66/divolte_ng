@@ -1,0 +1,323 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Divolte Collector - Schema &amp; Mapping</title>
+  <link rel="icon" type="image/x-icon" href="{{$.URIPrefix}}/static/favicon.ico">
+  <style>
+    :root {
+      --accent: #00a7ca;
+      --accent-hover: #00889f;
+      --accent-bg: #e6f8fb;
+      --green: #16a34a;
+      --green-hover: #15803d;
+      --amber: #b45309;
+      --amber-bg: #fffbeb;
+      --amber-border: #fde68a;
+      --red: #dc2626;
+      --red-bg: #fef2f2;
+      --border: #e2e2e7;
+      --text: #231f20;
+      --muted: #6b7280;
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem 1.5rem 2.5rem;
+    }
+    .page { max-width: 1160px; margin: 0 auto; }
+
+    .brandbar {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding-bottom: 1rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border);
+    }
+    .brandbar img.logo { height: 22px; width: auto; display: block; }
+    .brandbar .divider { width: 1px; height: 20px; background: var(--border); }
+    .brandbar .app-name { font-size: 0.95rem; font-weight: 600; color: var(--muted); }
+
+    .topbar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; gap: 1rem; flex-wrap: wrap; }
+    h1 { font-size: 1.4rem; margin: 0; }
+    .subtitle { color: var(--muted); font-size: 0.85rem; margin-top: 0.3rem; }
+    .topbar-actions { display: flex; gap: 0.6rem; align-items: center; }
+
+    a.new-link {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.55rem 1rem; background: #fff; border: 1px solid var(--border); color: var(--text);
+      text-decoration: none; border-radius: 8px; font-size: 0.88rem; font-weight: 500;
+    }
+    a.new-link:hover { background: #f9fafb; }
+
+    button.move-btn {
+      background: #fff; border: 1px solid var(--border); color: var(--text);
+      padding: 0.55rem 0.85rem; border-radius: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 500;
+    }
+    button.move-btn:hover:not(:disabled) { background: #f9fafb; }
+    button.move-btn:disabled { color: #c4c6cc; cursor: not-allowed; }
+
+    button.revert-btn {
+      background: #fff; border: 1px solid var(--amber-border); color: var(--amber);
+      padding: 0.55rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 500;
+    }
+    button.revert-btn:hover { background: var(--amber-bg); }
+
+    button.publish-btn {
+      background: var(--accent); color: white; border: none; padding: 0.55rem 1.2rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 600;
+    }
+    button.publish-btn:hover { background: var(--accent-hover); }
+
+    .flash { padding: 0.7rem 1rem; margin-bottom: 1.25rem; border-radius: 8px; font-size: 0.88rem; border: 1px solid transparent; }
+    .flash.ok { background: #f0fdf4; color: var(--green-hover); border-color: #bbf7d0; }
+    .flash.err { background: var(--red-bg); color: var(--red); border-color: #fecaca; }
+    .flash.pending { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-border); }
+
+    .toolbar { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .search-wrap { position: relative; flex: 1; max-width: 340px; }
+    .search-wrap svg { position: absolute; left: 0.65rem; top: 50%; transform: translateY(-50%); color: var(--muted); }
+    input#field-search {
+      width: 100%; padding: 0.5rem 0.7rem 0.5rem 2rem; font-size: 0.86rem;
+      border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--text);
+    }
+    input#field-search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+    .match-count { color: var(--muted); font-size: 0.82rem; white-space: nowrap; }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .table-scroll { overflow-x: auto; overflow-y: auto; max-height: 72vh; border-radius: 12px; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.86rem; min-width: 780px; }
+    th, td { padding: 0.6rem 0.9rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th {
+      position: sticky; top: 0; z-index: 1;
+      background: #fafafa; color: var(--muted); font-weight: 600; font-size: 0.72rem;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      box-shadow: 0 1px 0 var(--border);
+    }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #fafbff; }
+    tbody tr.selected { background: var(--accent-bg); }
+    tbody tr.dragging { opacity: 0.4; }
+    tbody tr.hidden-by-search { display: none; }
+    td.grip { width: 1.75rem; padding-right: 0; }
+    .grip-handle {
+      cursor: grab; color: #c4c6cc; font-size: 1rem; line-height: 1;
+      display: inline-block; padding: 0.2rem 0.3rem; user-select: none;
+    }
+    .grip-handle:hover { color: var(--muted); }
+    td.check { width: 1.5rem; }
+    td.num { color: var(--muted); width: 2.5rem; }
+    a.field-link { color: var(--accent-hover); text-decoration: none; font-weight: 500; }
+    a.field-link:hover { text-decoration: underline; }
+    code { background: #f1f1f4; padding: 0.15rem 0.4rem; border-radius: 4px; font-family: var(--mono); font-size: 0.82rem; }
+    em { color: var(--muted); font-style: normal; }
+    .rule-cell { color: #444; }
+
+    td.actions { text-align: right; white-space: nowrap; }
+    button.delete-btn {
+      background: none; border: 1px solid var(--border); color: var(--red);
+      padding: 0.3rem 0.7rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
+    }
+    button.delete-btn:hover { background: var(--red-bg); border-color: #fecaca; }
+
+    .empty-state { padding: 2.5rem 1rem; text-align: center; color: var(--muted); font-size: 0.88rem; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="brandbar">
+      <img class="logo" src="{{$.URIPrefix}}/static/logo.svg" alt="Divolte Collector">
+      <div class="divider"></div>
+      <div class="app-name">Divolte Collector &middot; Schema &amp; Mapping</div>
+    </div>
+
+    <div class="topbar">
+      <div>
+        <h1>Fields</h1>
+        <div class="subtitle">{{len .Fields}} fields &middot; drag the grip to reorder, or select consecutive rows and use Move up/down &middot; Publish swaps the live schema/mapping into the running server, no restart needed</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="move-btn" type="submit" form="reorder-form" name="direction" value="up" id="move-up-btn" disabled title="Select one or more consecutive fields to move them">&uarr; Move up</button>
+        <button class="move-btn" type="submit" form="reorder-form" name="direction" value="down" id="move-down-btn" disabled title="Select one or more consecutive fields to move them">&darr; Move down</button>
+        <a class="new-link" href="{{$.URIPrefix}}/logout">Log out</a>
+        <a class="new-link" href="{{$.URIPrefix}}/settings">Settings</a>
+        <a class="new-link" href="{{$.URIPrefix}}/fields/new">+ New field</a>
+        {{if .HasUnpublishedChanges}}
+        <form method="post" action="{{$.URIPrefix}}/revert" onsubmit="return confirm('Discard all changes since the last Publish? This cannot be undone.');" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+          <button class="revert-btn" type="submit">Revert changes</button>
+        </form>
+        {{end}}
+        <form method="post" action="{{$.URIPrefix}}/publish" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+          <button class="publish-btn" type="submit">Publish</button>
+        </form>
+      </div>
+    </div>
+
+    {{if .Flash}}<div class="flash {{.FlashClass}}">{{.Flash}}</div>{{end}}
+    {{if .HasUnpublishedChanges}}<div class="flash pending">You have changes that haven't been published yet.</div>{{end}}
+
+    <form id="reorder-form" method="post" action="{{$.URIPrefix}}/fields/reorder">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    </form>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="field-search" placeholder="Filter by name, type, or source&hellip;" autocomplete="off">
+      </div>
+      <span class="match-count" id="match-count"></span>
+    </div>
+
+    <div class="card">
+      <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th></th>
+            <th>#</th><th>Field</th><th>Type</th><th>Default</th><th>Source</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="field-rows">
+          {{range .Fields}}
+          <tr data-field="{{.Name}}" data-search="{{.Name}} {{.TypeJSON}} {{.RuleSummary}}">
+            <td class="grip"><span class="grip-handle" draggable="true" title="Drag to reorder">&#8942;&#8942;</span></td>
+            <td class="check"><input type="checkbox" class="row-select" form="reorder-form" name="selected_fields" value="{{.Name}}"></td>
+            <td class="num">{{.Position}}</td>
+            <td><a class="field-link" href="{{$.URIPrefix}}/fields/{{.Name}}/edit">{{.Name}}</a></td>
+            <td><code>{{.TypeJSON}}</code></td>
+            <td>{{if .HasDefault}}<code>{{.DefaultJSON}}</code>{{else}}<em>none</em>{{end}}</td>
+            <td class="rule-cell">{{.RuleSummary}}</td>
+            <td class="actions">
+              <form method="post" action="{{$.URIPrefix}}/fields/{{.Name}}/delete" onsubmit="return confirm('Delete field {{.Name}}?');" style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                <button class="delete-btn" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+      <div class="empty-state" id="no-match-state" style="display:none">No fields match your filter.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Quick client-side filter - matches against name, Avro type JSON, and
+    // the rule summary text, so an operator can find a field among 200+
+    // without scrolling. Purely a display filter: it never touches the
+    // server, and the drag/reorder/move controls below still operate on
+    // the underlying DOM order regardless of what's currently hidden.
+    (function() {
+      var input = document.getElementById('field-search');
+      var rows = Array.prototype.slice.call(document.querySelectorAll('#field-rows tr'));
+      var countEl = document.getElementById('match-count');
+      var emptyState = document.getElementById('no-match-state');
+
+      function applyFilter() {
+        var q = input.value.trim().toLowerCase();
+        var shown = 0;
+        rows.forEach(function(row) {
+          var haystack = (row.dataset.search || '').toLowerCase();
+          var match = q === '' || haystack.indexOf(q) !== -1;
+          row.classList.toggle('hidden-by-search', !match);
+          if (match) shown++;
+        });
+        countEl.textContent = q === '' ? '' : (shown + ' of ' + rows.length + ' fields');
+        emptyState.style.display = (shown === 0 && rows.length > 0) ? 'block' : 'none';
+      }
+      input.addEventListener('input', applyFilter);
+      applyFilter();
+    })();
+  </script>
+  <script>
+    // Fields must be consecutive (as currently displayed) to be moved
+    // together via the Move up/down buttons - this only toggles those
+    // buttons; the server (Store.ReorderBlock) re-validates and rejects a
+    // non-consecutive selection regardless.
+    function updateMoveButtons() {
+      var boxes = Array.prototype.slice.call(document.querySelectorAll('.row-select'));
+      var checkedIdx = [];
+      boxes.forEach(function(box, i) {
+        box.closest('tr').classList.toggle('selected', box.checked);
+        if (box.checked) checkedIdx.push(i);
+      });
+      var consecutive = checkedIdx.length > 0 &&
+        (checkedIdx[checkedIdx.length - 1] - checkedIdx[0] + 1 === checkedIdx.length);
+      document.getElementById('move-up-btn').disabled = !consecutive;
+      document.getElementById('move-down-btn').disabled = !consecutive;
+    }
+    document.querySelectorAll('.row-select').forEach(function(box) {
+      box.addEventListener('change', updateMoveButtons);
+    });
+    updateMoveButtons();
+
+    // Drag-and-drop reordering: only the grip handle is draggable, but the
+    // whole row moves with it. Dragging over another row live-reorders the
+    // DOM (standard "sortable list" pattern); on drop, the full new order
+    // is posted to the server, which is still the source of truth (it
+    // validates the posted names are exactly the existing field set).
+    (function() {
+      var tbody = document.getElementById('field-rows');
+      var draggingRow = null;
+
+      tbody.querySelectorAll('.grip-handle').forEach(function(handle) {
+        var row = handle.closest('tr');
+
+        handle.addEventListener('dragstart', function(e) {
+          draggingRow = row;
+          row.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          // Firefox requires data to be set for drag to start at all.
+          e.dataTransfer.setData('text/plain', row.dataset.field);
+        });
+        handle.addEventListener('dragend', function() {
+          row.classList.remove('dragging');
+          if (draggingRow === row) {
+            submitNewOrder();
+            draggingRow = null;
+          }
+        });
+      });
+
+      tbody.querySelectorAll('tr').forEach(function(row) {
+        row.addEventListener('dragover', function(e) {
+          if (!draggingRow || draggingRow === row) return;
+          e.preventDefault();
+          var rect = row.getBoundingClientRect();
+          var before = (e.clientY - rect.top) < rect.height / 2;
+          tbody.insertBefore(draggingRow, before ? row : row.nextSibling);
+        });
+      });
+
+      function submitNewOrder() {
+        var names = Array.prototype.map.call(tbody.querySelectorAll('tr'), function(r) { return r.dataset.field; });
+        var body = names.map(function(n) { return 'field_order=' + encodeURIComponent(n); }).join('&');
+        fetch('{{.URIPrefix}}/fields/set-order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': {{.CSRFToken}}
+          },
+          body: body
+        }).then(function() {
+          window.location.reload();
+        }).catch(function() {
+          window.location.reload();
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

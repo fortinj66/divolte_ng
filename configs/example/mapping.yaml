@@ -1,0 +1,26 @@
+# Small example mapping for configs/example/schema.avsc - just enough to
+# demonstrate every kind of mapping rule (builtin, event parameter, with a
+# default) against a tracking beacon. Point schema_file/mapping_file at
+# your own real schema/mapping to actually use this in production.
+fields:
+  - field: partyId
+    builtin: partyId
+  - field: sessionId
+    builtin: sessionId
+  - field: pageViewId
+    builtin: pageViewId
+  - field: timestamp
+    builtin: timestamp
+  - field: eventType
+    builtin: eventType
+  - field: location
+    builtin: location
+  - field: referer
+    builtin: referer
+    default: ""
+  - field: userAgentFamily
+    builtin: userAgent.family
+  - field: detectedDuplicate
+    builtin: duplicate
+  - field: customLabel
+    event_param: label

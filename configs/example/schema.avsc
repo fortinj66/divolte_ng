@@ -1,0 +1,17 @@
+{
+    "namespace": "com.example.divolte.record",
+    "type": "record",
+    "name": "example_event",
+    "fields": [
+        { "name": "partyId",             "type": "string" },
+        { "name": "sessionId",           "type": "string" },
+        { "name": "pageViewId",          "type": "string" },
+        { "name": "timestamp",           "type": "long" },
+        { "name": "eventType",           "type": ["null", "string"], "default": null },
+        { "name": "location",            "type": ["null", "string"], "default": null },
+        { "name": "referer",             "type": ["null", "string"], "default": null },
+        { "name": "userAgentFamily",     "type": ["null", "string"], "default": null },
+        { "name": "detectedDuplicate",   "type": "boolean" },
+        { "name": "customLabel",         "type": ["null", "string"], "default": null }
+    ]
+}

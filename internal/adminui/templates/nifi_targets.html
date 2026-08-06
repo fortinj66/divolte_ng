@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Divolte Collector - NiFi Targets</title>
+  <link rel="icon" type="image/x-icon" href="{{.URIPrefix}}/static/favicon.ico">
+  <style>
+    :root {
+      --accent: #00a7ca; --accent-hover: #00889f; --accent-bg: #e6f8fb;
+      --green-hover: #15803d; --red: #dc2626; --red-bg: #fef2f2;
+      --border: #e2e2e7; --text: #231f20; --muted: #6b7280; --bg: #f4f5f7; --card: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg); color: var(--text); margin: 0; padding: 2rem 1.5rem 2.5rem;
+    }
+    .page { max-width: 760px; margin: 0 auto; }
+    .brandbar {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding-bottom: 1rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border);
+    }
+    .brandbar img.logo { height: 22px; width: auto; display: block; }
+    .brandbar .divider { width: 1px; height: 20px; background: var(--border); }
+    .brandbar .app-name { font-size: 0.95rem; font-weight: 600; color: var(--muted); }
+    .topbar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; }
+    h1 { font-size: 1.3rem; margin: 0 0 0.3rem; }
+    .subtitle { color: var(--muted); font-size: 0.85rem; }
+    .flash { padding: 0.7rem 1rem; margin-bottom: 1.25rem; border-radius: 8px; font-size: 0.88rem; border: 1px solid transparent; }
+    .flash.ok { background: #f0fdf4; color: var(--green-hover); border-color: #bbf7d0; }
+    .flash.err { background: var(--red-bg); color: var(--red); border-color: #fecaca; }
+    a.new-link {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.55rem 1rem; background: #fff; border: 1px solid var(--border); color: var(--text);
+      text-decoration: none; border-radius: 8px; font-size: 0.88rem; font-weight: 500;
+    }
+    a.new-link:hover { background: #f9fafb; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+    th, td { padding: 0.7rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #fafbff; }
+    a.name-link { color: var(--accent-hover); text-decoration: none; font-weight: 500; }
+    a.name-link:hover { text-decoration: underline; }
+    .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .badge.on { background: #f0fdf4; color: var(--green-hover); }
+    .badge.off { background: #f4f5f7; color: var(--muted); }
+    td.actions { text-align: right; white-space: nowrap; }
+    button.delete-btn {
+      background: none; border: 1px solid var(--border); color: var(--red);
+      padding: 0.3rem 0.7rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
+    }
+    button.delete-btn:hover { background: var(--red-bg); border-color: #fecaca; }
+    .empty-state { padding: 2.5rem 1rem; text-align: center; color: var(--muted); font-size: 0.88rem; }
+    a.back-link { display: inline-block; margin-top: 1.25rem; color: var(--accent-hover); font-size: 0.85rem; text-decoration: none; }
+    a.back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="brandbar">
+      <img class="logo" src="{{.URIPrefix}}/static/logo.svg" alt="Divolte Collector">
+      <div class="divider"></div>
+      <div class="app-name">Divolte Collector &middot; NiFi Targets</div>
+    </div>
+
+    <div class="topbar">
+      <div>
+        <h1>NiFi targets</h1>
+        <div class="subtitle">One row per NiFi cluster to push the Avro schema to on Publish - e.g. nifi-01 and nifi-02 are separate clusters.</div>
+      </div>
+      <a class="new-link" href="{{.URIPrefix}}/nifi-targets/new">+ New target</a>
+    </div>
+
+    {{if .Flash}}<div class="flash {{.FlashClass}}">{{.Flash}}</div>{{end}}
+
+    <div class="card">
+      {{if .Targets}}
+      <table>
+        <thead><tr><th>Name</th><th>Status</th><th>Base URL</th><th>Parameter</th><th></th></tr></thead>
+        <tbody>
+          {{range .Targets}}
+          <tr>
+            <td><a class="name-link" href="{{$.URIPrefix}}/nifi-targets/{{.ID}}/edit">{{.ID}}</a></td>
+            <td>{{if .Enabled}}<span class="badge on">enabled</span>{{else}}<span class="badge off">disabled</span>{{end}}</td>
+            <td>{{.BaseURL}}</td>
+            <td>{{.ParameterName}}</td>
+            <td class="actions">
+              <form method="post" action="{{$.URIPrefix}}/nifi-targets/{{.ID}}/delete" onsubmit="return confirm('Delete NiFi target {{.ID}}?');" style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                <button class="delete-btn" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+      {{else}}
+      <div class="empty-state">No NiFi targets configured yet.</div>
+      {{end}}
+    </div>
+
+    <a class="back-link" href="{{.URIPrefix}}/settings">&larr; Back to settings</a>
+  </div>
+</body>
+</html>

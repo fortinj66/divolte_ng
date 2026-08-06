@@ -1,0 +1,20 @@
+# Build output for each buildable command
+/divolte-collector
+/smoketest
+/topicwatch
+/paritycheck
+/trafficmirror
+*.exe
+*.test
+
+# Logs
+*.log
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+# OS cruft
+.DS_Store
+Thumbs.db

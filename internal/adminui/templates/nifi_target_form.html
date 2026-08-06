@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Divolte Collector - {{if .IsNew}}New NiFi target{{else}}Edit {{.Target.ID}}{{end}}</title>
+  <link rel="icon" type="image/x-icon" href="{{.URIPrefix}}/static/favicon.ico">
+  <style>
+    :root {
+      --accent: #00a7ca; --accent-hover: #00889f; --accent-bg: #e6f8fb;
+      --green-hover: #15803d; --red: #dc2626; --red-bg: #fef2f2;
+      --border: #e2e2e7; --text: #231f20; --muted: #6b7280; --bg: #f4f5f7; --card: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg); color: var(--text); margin: 0; padding: 2rem 1.5rem 2.5rem;
+    }
+    .page { max-width: 620px; margin: 0 auto; }
+    .brandbar {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding-bottom: 1rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border);
+    }
+    .brandbar img.logo { height: 22px; width: auto; display: block; }
+    .brandbar .divider { width: 1px; height: 20px; background: var(--border); }
+    .brandbar .app-name { font-size: 0.95rem; font-weight: 600; color: var(--muted); }
+    h1 { font-size: 1.3rem; margin: 0 0 1.25rem; }
+    .flash { padding: 0.7rem 1rem; margin-bottom: 1.25rem; border-radius: 8px; font-size: 0.88rem; border: 1px solid transparent; }
+    .flash.err { background: var(--red-bg); color: var(--red); border-color: #fecaca; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; }
+    label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--muted); margin: 1rem 0 0.35rem; }
+    label:first-child { margin-top: 0; }
+    input[type=text], input[type=password] {
+      width: 100%; padding: 0.55rem 0.7rem; font-size: 0.9rem;
+      border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--text);
+    }
+    input[readonly] { background: #f4f5f7; color: var(--muted); }
+    input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+    textarea {
+      width: 100%; padding: 0.55rem 0.7rem; font-size: 0.85rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--text);
+      resize: vertical; min-height: 4.5rem;
+    }
+    textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+    .hint { color: var(--muted); font-size: 0.78rem; margin-top: 0.35rem; }
+    .checkbox-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; }
+    .checkbox-row input[type=checkbox] { width: 16px; height: 16px; }
+    .checkbox-row label { margin: 0; font-size: 0.88rem; font-weight: 500; color: var(--text); }
+    .actions-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 1.5rem; }
+    button.save-btn {
+      background: var(--accent); color: white; border: none; padding: 0.6rem 1.3rem;
+      border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+    }
+    button.save-btn:hover { background: var(--accent-hover); }
+    button.test-btn {
+      margin-top: 1rem; background: #fff; border: 1px solid var(--border); color: var(--text);
+      padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 500;
+    }
+    button.test-btn:hover:not(:disabled) { background: #f9fafb; }
+    button.test-btn:disabled { color: #c4c6cc; cursor: not-allowed; }
+    #test-result { margin-top: 0.5rem; font-size: 0.82rem; }
+    #test-result.ok { color: var(--green-hover); }
+    #test-result.err { color: var(--red); }
+    a.back-link { display: inline-block; margin-top: 1.25rem; color: var(--accent-hover); font-size: 0.85rem; text-decoration: none; }
+    a.back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="brandbar">
+      <img class="logo" src="{{.URIPrefix}}/static/logo.svg" alt="Divolte Collector">
+      <div class="divider"></div>
+      <div class="app-name">Divolte Collector &middot; NiFi Targets</div>
+    </div>
+
+    <h1>{{if .IsNew}}New NiFi target{{else}}Edit {{.Target.ID}}{{end}}</h1>
+
+    {{if .Error}}<div class="flash err">{{.Error}}</div>{{end}}
+
+    <div class="card">
+      <form method="post" action="{{if .IsNew}}{{.URIPrefix}}/nifi-targets{{else}}{{.URIPrefix}}/nifi-targets/{{.Target.ID}}{{end}}">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+
+        <label for="id">Name</label>
+        {{if .IsNew}}
+        <input type="text" id="id" name="id" placeholder="nifi-02" autocomplete="off">
+        <div class="hint">A short slug identifying this cluster - shown in Publish results. Cannot be changed after creation.</div>
+        {{else}}
+        <input type="text" id="id" value="{{.Target.ID}}" readonly>
+        {{end}}
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="enabled" name="enabled" {{if .Target.Enabled}}checked{{end}}>
+          <label for="enabled">Enabled (included in Publish)</label>
+        </div>
+
+        <label for="base_url">NiFi base URL</label>
+        <input type="text" id="base_url" name="base_url" value="{{.Target.BaseURL}}" placeholder="https://nifi-01.example.com:9443">
+
+        <label for="client_cert">Client certificate (PEM)</label>
+        <textarea id="client_cert" name="client_cert" placeholder="-----BEGIN CERTIFICATE-----">{{.Target.ClientCertPEM}}</textarea>
+
+        <label for="client_key">Client private key (PEM)</label>
+        <textarea id="client_key" name="client_key" placeholder="leave blank to keep the current key"></textarea>
+        <div class="hint">Blank means do not change the stored key.</div>
+
+        <label for="client_key_passphrase">Client private key passphrase (optional)</label>
+        <input type="password" id="client_key_passphrase" name="client_key_passphrase" placeholder="leave blank to keep the current passphrase" autocomplete="new-password">
+        <div class="hint">Only needed if the key above is passphrase-protected. Blank means do not change the stored passphrase.</div>
+
+        <label for="ca_cert">CA certificate (PEM, optional)</label>
+        <textarea id="ca_cert" name="ca_cert" placeholder="leave blank to skip TLS verification">{{.Target.CACertPEM}}</textarea>
+
+        <label for="parameter_context_id">Parameter Context ID</label>
+        <input type="text" id="parameter_context_id" name="parameter_context_id" value="{{.Target.ParameterContextID}}">
+
+        <label for="parameter_name">Parameter name</label>
+        <input type="text" id="parameter_name" name="parameter_name" value="{{.Target.ParameterName}}" placeholder="NiFiAvroSchema">
+
+        <label for="controller_service_id">Controller service ID (optional, for dependency-chain handling)</label>
+        <input type="text" id="controller_service_id" name="controller_service_id" value="{{.Target.ControllerServiceID}}">
+
+        <button class="test-btn" type="button" id="test-btn">Test connection</button>
+        <div id="test-result"></div>
+
+        <div class="actions-row">
+          <button class="save-btn" type="submit">Save target</button>
+        </div>
+      </form>
+    </div>
+
+    <a class="back-link" href="{{.URIPrefix}}/nifi-targets">&larr; Back to NiFi targets</a>
+  </div>
+
+  <script>
+    (function() {
+      var btn = document.getElementById('test-btn');
+      var result = document.getElementById('test-result');
+      var testURL = {{if .IsNew}}'{{.URIPrefix}}/nifi-targets/_new/test'{{else}}'{{.URIPrefix}}/nifi-targets/{{.Target.ID}}/test'{{end}};
+
+      btn.addEventListener('click', function() {
+        btn.disabled = true;
+        result.className = '';
+        result.textContent = 'Testing...';
+
+        var body = new URLSearchParams();
+        ['base_url', 'client_cert', 'client_key', 'client_key_passphrase', 'ca_cert', 'parameter_context_id', 'parameter_name', 'controller_service_id'].forEach(function(name) {
+          body.set(name, document.getElementById(name).value);
+        });
+
+        fetch(testURL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-Token': {{.CSRFToken}}
+          },
+          body: body.toString()
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          result.className = data.ok ? 'ok' : 'err';
+          result.textContent = data.message;
+        }).catch(function(err) {
+          result.className = 'err';
+          result.textContent = 'Test request failed: ' + err;
+        }).finally(function() {
+          btn.disabled = false;
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

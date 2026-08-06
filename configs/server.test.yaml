@@ -1,0 +1,33 @@
+# Scratch config for local smoke testing - points at a local Kafka +
+# MariaDB, not any real deployment. configs/server.yaml is the real one.
+listen_addr: ":18290"
+prefix: "/webstats/"
+script_name: "divolte_ng.js"
+event_suffix: "csc-event"
+
+schema_file: "configs/example/schema.avsc"
+mapping_file: "configs/example/mapping.yaml"
+
+kafka:
+  brokers:
+    - "localhost:9092"
+  client_id: "divolte-go-rewrite-smoketest"
+  topic: "divolte_example_event_test"
+
+workers: 2
+queue_size: 1000
+duplicate_memory_size: 10000
+
+admin:
+  listen_addr: ":18291"
+  # Throwaway local dev MariaDB container - see docs/admin-ui-guide.md.
+  db:
+    host: "localhost"
+    port: 3306
+    name: "divolte_config"
+    username: "divolte"
+    password: "change-me-test-db"
+  username: "admin"
+  password: "change-me-test-admin"
+  schema_namespace: "com.example.divolte.record"
+  schema_record_name: "example_event"
