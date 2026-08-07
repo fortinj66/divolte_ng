@@ -69,6 +69,7 @@ configs/example/  a small, synthetic schema.avsc + mapping.yaml - just
                    enough to build/run/demo out of the box; point at your
                    own real schema/mapping for actual production use
 assets/           embedded tracking-tag JS + 1x1 GIF
+test/e2e/         reproducible Podman-based full-pipeline test framework
 reference/        a full copy of the original Java source, for reference
 ```
 
@@ -270,9 +271,38 @@ This ships with `configs/example/` (a small synthetic schema/mapping) and
 MariaDB on `localhost` - bring up both locally (or point the config at
 your own) to actually run it end-to-end.
 
-`go test ./...` runs the full suite; `go vet ./...` should be clean.
-Pre-push checklist for any change: `gofmt -w .`, `go vet ./...`,
-`go test -race ./...`.
+For a repo-owned local stack using MariaDB, single-node Kafka, and the
+collector, use Podman Compose. The Kafka service also joins the Druid E2E
+network, so create that network once when running the core stack by itself:
+
+```bash
+podman network exists druid-cluster_default || podman network create druid-cluster_default
+podman compose up -d --build
+```
+
+The collector is then available on `http://localhost:8290`, the admin UI on
+`http://localhost:8291`, and Kafka on `localhost:9092`. The local credentials
+in `compose.yml` and `configs/server.podman.yaml` are test credentials only.
+
+### Testing
+
+`go test ./...` runs all Go unit and integration tests; `go vet ./...` should
+be clean. The pre-push checklist for a normal Go change is `gofmt -w .`,
+`go vet ./...`, and `go test -race ./...`.
+
+The complete clean-room pipeline suite is:
+
+```bash
+test/e2e/scripts/run-clean-e2e.sh
+```
+
+It starts from empty scoped container volumes, builds the local images, runs
+all Go tests, exercises the real tracking script in headless Chromium, checks
+Avro and JSON Kafka output plus live target/schema changes, proves multi-node
+watchdog propagation, provisions secured NiFi from zero state, and validates
+fresh-row ingestion through both Druid paths. See
+**[test/e2e/README.md](test/e2e/README.md)** for prerequisites, component
+versions, narrower runners, and troubleshooting details.
 
 ## Ops tooling
 

@@ -1,0 +1,42 @@
+services:
+  nifi:
+    image: docker.io/apache/nifi:1.19.1
+    container_name: divolte-e2e-nifi
+    hostname: nifi
+    ports:
+      - "9443:9443"
+    environment:
+      AUTH: "tls"
+      NIFI_WEB_HTTPS_HOST: "0.0.0.0"
+      NIFI_WEB_HTTPS_PORT: "9443"
+      NIFI_WEB_PROXY_HOST: "localhost:9443"
+      KEYSTORE_PATH: "/opt/certs/nifi.keystore.p12"
+      KEYSTORE_TYPE: "PKCS12"
+      KEYSTORE_PASSWORD: "changeit"
+      TRUSTSTORE_PATH: "/opt/certs/nifi.truststore.p12"
+      TRUSTSTORE_TYPE: "PKCS12"
+      TRUSTSTORE_PASSWORD: "changeit"
+      INITIAL_ADMIN_IDENTITY: "CN=divolte-e2e-client, O=Divolte E2E, L=City, ST=State, C=US"
+    volumes:
+      - ../tmp/nifi-certs:/opt/certs:ro,Z
+      - nifi_state:/opt/nifi/nifi-current/state
+      - nifi_database_repository:/opt/nifi/nifi-current/database_repository
+      - nifi_flowfile_repository:/opt/nifi/nifi-current/flowfile_repository
+      - nifi_content_repository:/opt/nifi/nifi-current/content_repository
+      - nifi_provenance_repository:/opt/nifi/nifi-current/provenance_repository
+    networks:
+      - default
+      - divolte
+
+volumes:
+  nifi_state:
+  nifi_database_repository:
+  nifi_flowfile_repository:
+  nifi_content_repository:
+  nifi_provenance_repository:
+
+networks:
+  default: {}
+  divolte:
+    external: true
+    name: divolte_ng_default

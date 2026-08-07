@@ -28,7 +28,17 @@ func main() {
 	brokers := flag.String("brokers", "localhost:9092", "comma-separated Kafka brokers")
 	topic := flag.String("topic", "divolte_example_event_test", "Kafka topic to consume from (must be the scratch test topic)")
 	schemaFile := flag.String("schema", "configs/example/schema.avsc", "path to the .avsc schema")
+	custom := flag.String("custom", "", "additional custom event parameter as name=value")
 	flag.Parse()
+
+	customName, customValue := "", ""
+	if *custom != "" {
+		var ok bool
+		customName, customValue, ok = strings.Cut(*custom, "=")
+		if !ok || customName == "" {
+			log.Fatalf("invalid -custom value %q: expected name=value", *custom)
+		}
+	}
 
 	codec, err := avroenc.LoadSchemaFile(*schemaFile)
 	if err != nil {
@@ -75,6 +85,9 @@ func main() {
 	customParams := map[string]interface{}{
 		"label": "smoketest-label",
 	}
+	if customName != "" {
+		customParams[customName] = customValue
+	}
 
 	encodedParams, err := mincode.Encode(customParams)
 	if err != nil {
@@ -110,6 +123,9 @@ func main() {
 		for _, field := range []string{"partyId", "sessionId", "pageViewId", "eventType", "location",
 			"referer", "userAgentFamily", "detectedDuplicate", "customLabel"} {
 			fmt.Printf("  %-20s = %v\n", field, decoded[field])
+		}
+		if customName != "" {
+			fmt.Printf("  %-20s = %v\n", customName, decoded[customName])
 		}
 	case <-ctx.Done():
 		log.Println("TIMED OUT waiting for the message - check the server log")

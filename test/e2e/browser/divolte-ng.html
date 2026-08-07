@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>divolte_ng.js browser exercise</title>
+</head>
+<body>
+  <h1>divolte_ng.js browser exercise</h1>
+  <pre id="result">loading</pre>
+  <script>
+    (function () {
+      "use strict";
+
+      var result = document.getElementById("result");
+      var query = new URLSearchParams(window.location.search);
+      var label = query.get("label") ||
+        "divolte-ng-browser-exercise";
+      var collector = query.get("collector") || "http://localhost:8290";
+
+      function render(state) {
+        result.textContent = JSON.stringify(state, null, 2);
+        result.dataset.state = state.state;
+      }
+
+      function exercise() {
+        if (!window.divolte) {
+          render({state: "failed", error: "window.divolte was not created"});
+          return;
+        }
+
+        var eventId = window.divolte.signal("browserExercise", {label: label});
+        var state = {
+          state: "pending",
+          label: label,
+          eventId: eventId,
+          partyId: window.divolte.partyId,
+          sessionId: window.divolte.sessionId,
+          pageViewId: window.divolte.pageViewId,
+          cookies: document.cookie
+        };
+        render(state);
+
+        window.divolte.whenCommitted(function () {
+          state.state = "committed";
+          state.cookies = document.cookie;
+          render(state);
+        }, 3000);
+      }
+
+      var script = document.createElement("script");
+      script.src = collector.replace(/\/$/, "") + "/webstats/divolte_ng.js";
+      script.onload = exercise;
+      script.onerror = function () {
+        render({state: "failed", error: "failed to load " + script.src});
+      };
+      document.head.appendChild(script);
+    }());
+  </script>
+</body>
+</html>

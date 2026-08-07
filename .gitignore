@@ -1,11 +1,19 @@
 # Build output for each buildable command
+/bin/
 /divolte-collector
+/paritycheck
 /smoketest
 /topicwatch
-/paritycheck
 /trafficmirror
 *.exe
 *.test
+
+# Generated end-to-end test output, including private test keys.
+/test/e2e/tmp/
+
+# Go test/build artifacts.
+*.out
+coverage.*
 
 # Logs
 *.log

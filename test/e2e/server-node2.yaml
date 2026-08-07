@@ -1,0 +1,34 @@
+listen_addr: ":18390"
+prefix: "/webstats/"
+script_name: "divolte_ng.js"
+event_suffix: "csc-event"
+
+schema_file: "configs/example/schema.avsc"
+mapping_file: "configs/example/mapping.yaml"
+
+kafka:
+  brokers:
+    - "localhost:9092"
+  client_id: "divolte-ng-e2e-node2"
+  topic: "divolte_example_event"
+
+workers: 2
+queue_size: 1000
+duplicate_memory_size: 10000
+shutdown_delay_seconds: 1
+config_watchdog_interval_seconds: 2
+
+admin:
+  listen_addr: ":18391"
+  db:
+    host: "localhost"
+    port: 3306
+    name: "divolte_config"
+    username: "divolte"
+    password: "change-me"
+  username: "admin"
+  password: "change-me"
+  schema_namespace: "com.example.divolte.record"
+  schema_record_name: "example_event"
+  ldap:
+    enabled: false

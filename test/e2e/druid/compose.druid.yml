@@ -1,0 +1,116 @@
+version: "2.2"
+
+volumes:
+  metadata_data: {}
+  master_var: {}
+  historical_var: {}
+  middlemanager_var: {}
+  broker_var: {}
+  router_var: {}
+  druid_shared: {}
+
+networks:
+  default:
+    name: druid-cluster_default
+
+services:
+  postgres:
+    image: docker.io/library/postgres:17.6
+    container_name: druid-postgres
+    environment:
+      POSTGRES_PASSWORD: FoolishPassword
+      POSTGRES_USER: druid
+      POSTGRES_DB: druid
+    ports:
+      - "15432:5432"
+    volumes:
+      - metadata_data:/var/lib/postgresql/data
+
+  zookeeper:
+    image: docker.io/library/zookeeper:3.5.10
+    container_name: druid-zookeeper
+    environment:
+      ZOO_MY_ID: "1"
+    ports:
+      - "2181:2181"
+
+  druid-master:
+    image: docker.io/apache/druid:24.0.2
+    container_name: druid-master
+    depends_on:
+      - postgres
+      - zookeeper
+    env_file:
+      - environment
+    entrypoint: ["/bin/sh", "-ec", "/druid.sh coordinator"]
+    ports:
+      - "8081:8081"
+      - "8090:8090"
+    volumes:
+      - druid_shared:/opt/shared
+      - master_var:/opt/druid/var
+
+  druid-historical:
+    image: docker.io/apache/druid:24.0.2
+    container_name: druid-historical
+    depends_on:
+      - postgres
+      - zookeeper
+      - druid-master
+    env_file:
+      - environment
+    entrypoint: ["/druid.sh", "historical"]
+    ports:
+      - "8083:8083"
+    volumes:
+      - druid_shared:/opt/shared
+      - historical_var:/opt/druid/var
+
+  druid-middlemanager:
+    image: docker.io/apache/druid:24.0.2
+    container_name: druid-middlemanager
+    depends_on:
+      - postgres
+      - zookeeper
+      - druid-master
+    env_file:
+      - environment
+    entrypoint: ["/druid.sh", "middleManager"]
+    ports:
+      - "8091:8091"
+      - "8100-8105:8100-8105"
+    volumes:
+      - druid_shared:/opt/shared
+      - middlemanager_var:/opt/druid/var
+
+  druid-broker:
+    image: docker.io/apache/druid:24.0.2
+    container_name: druid-broker
+    depends_on:
+      - postgres
+      - zookeeper
+      - druid-master
+      - druid-historical
+    env_file:
+      - environment
+    entrypoint: ["/druid.sh", "broker"]
+    ports:
+      - "8082:8082"
+    volumes:
+      - broker_var:/opt/druid/var
+
+  druid-router:
+    image: docker.io/apache/druid:24.0.2
+    container_name: druid-router
+    depends_on:
+      - postgres
+      - zookeeper
+      - druid-master
+      - druid-broker
+    env_file:
+      - environment
+    entrypoint: ["/druid.sh", "router"]
+    ports:
+      - "8888:8888"
+    volumes:
+      - router_var:/opt/druid/var

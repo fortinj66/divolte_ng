@@ -1,0 +1,36 @@
+# Local Podman config for the self-contained compose stack. MariaDB is built
+# from docker/mariadb-dev and Kafka runs as a single-node KRaft broker.
+listen_addr: ":8290"
+prefix: "/webstats/"
+script_name: "divolte_ng.js"
+event_suffix: "csc-event"
+
+schema_file: "configs/example/schema.avsc"
+mapping_file: "configs/example/mapping.yaml"
+
+kafka:
+  brokers:
+    - "kafka:9094"
+  client_id: "divolte-ng-podman"
+  topic: "divolte_example_event"
+
+workers: 4
+queue_size: 10000
+duplicate_memory_size: 1000000
+shutdown_delay_seconds: 5
+config_watchdog_interval_seconds: 30
+
+admin:
+  listen_addr: ":8291"
+  db:
+    host: "mariadb"
+    port: 3306
+    name: "divolte_config"
+    username: "divolte"
+    password: "change-me"
+  username: "admin"
+  password: "change-me"
+  schema_namespace: "com.example.divolte.record"
+  schema_record_name: "example_event"
+  ldap:
+    enabled: false

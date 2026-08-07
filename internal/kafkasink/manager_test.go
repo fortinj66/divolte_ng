@@ -2,6 +2,7 @@ package kafkasink
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 
 	"github.com/IBM/sarama/mocks"
@@ -100,7 +101,7 @@ func TestPublishFansOutOncePerFormat(t *testing.T) {
 	m := NewManager("test-client")
 	m.newSink = fakeSinkFactory(t, &opens)
 
-	avroCalls, jsonCalls := 0, 0
+	var avroCalls, jsonCalls int32
 	if err := m.Reconcile([]TargetSpec{
 		{ID: "a1", Format: "avro", Topic: "t-a1", Brokers: []string{"b:9092"}},
 		{ID: "a2", Format: "avro", Topic: "t-a2", Brokers: []string{"b:9092"}},
@@ -116,12 +117,12 @@ func TestPublishFansOutOncePerFormat(t *testing.T) {
 		producer := mocks.NewSyncProducer(t, mocks.NewTestConfig())
 		if rt.spec.Format == "avro" {
 			producer.ExpectSendMessageWithCheckerFunctionAndSucceed(func(val []byte) error {
-				avroCalls++
+				atomic.AddInt32(&avroCalls, 1)
 				return nil
 			})
 		} else {
 			producer.ExpectSendMessageWithCheckerFunctionAndSucceed(func(val []byte) error {
-				jsonCalls++
+				atomic.AddInt32(&jsonCalls, 1)
 				return nil
 			})
 		}
@@ -133,10 +134,10 @@ func TestPublishFansOutOncePerFormat(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("Publish errors: %v", errs)
 	}
-	if avroCalls != 2 {
-		t.Errorf("avroCalls = %d, want 2", avroCalls)
+	if got := atomic.LoadInt32(&avroCalls); got != 2 {
+		t.Errorf("avroCalls = %d, want 2", got)
 	}
-	if jsonCalls != 1 {
-		t.Errorf("jsonCalls = %d, want 1", jsonCalls)
+	if got := atomic.LoadInt32(&jsonCalls); got != 1 {
+		t.Errorf("jsonCalls = %d, want 1", got)
 	}
 }

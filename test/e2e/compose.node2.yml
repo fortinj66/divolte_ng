@@ -1,0 +1,22 @@
+services:
+  divolte-collector-node2:
+    image: localhost/divolte_ng_divolte-collector:latest
+    container_name: divolte-ng-collector-node2
+    restart: on-failure
+    ports:
+      - "18390:8290"
+      - "18391:8291"
+    environment:
+      DIVOLTE_KAFKA_BROKER_LIST: "kafka:9094"
+      DIVOLTE_DB_PASSWORD: "change-me"
+      DIVOLTE_ADMIN_PASSWORD: "change-me"
+    command: ["-config", "configs/server-node2.yaml"]
+    volumes:
+      - ./server-node2.container.yaml:/app/configs/server-node2.yaml:ro,Z
+    networks:
+      - divolte
+
+networks:
+  divolte:
+    external: true
+    name: divolte_ng_default
