@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "$ROOT_DIR"
+mkdir -p test/e2e/tmp
 
 COLLECTOR_URL="${COLLECTOR_URL:-http://localhost:8290}"
 ADMIN_URL="${ADMIN_URL:-http://localhost:8291}"

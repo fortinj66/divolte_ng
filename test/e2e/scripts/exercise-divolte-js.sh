@@ -90,8 +90,8 @@ if ! RECORD="$(podman exec "$KAFKA_CONTAINER" /opt/kafka/bin/kafka-console-consu
 fi
 
 printf '%s\n' "$RECORD" | jq -e \
-  --arg label "$LABEL" \
-  '.customLabel == $label and .eventType == "browserExercise" and
+  --arg lbl "$LABEL" \
+  '.customLabel == $lbl and .eventType == "browserExercise" and
    .userAgentFamily == "Chrome" and .detectedDuplicate == false' >/dev/null
 
 echo "divolte_ng.js browser exercise passed"
