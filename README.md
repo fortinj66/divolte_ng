@@ -213,6 +213,7 @@ event_suffix: "csc-event"
 
 schema_file: "..."            # only read to SEED the DB store on first boot ever -
 mapping_file: "..."           # the shared DB is the live source of truth after that
+static_override_dir: "..."    # optional - see "Overriding branding assets" below
 
 kafka:
   # Legacy, one-time seed only: on first boot, if no Kafka output targets
@@ -252,6 +253,29 @@ admin:
     user_search_filter: "..."
     allowed_groups: [...]     # required non-empty when enabled - see internal/ldapauth
 ```
+
+### Overriding branding assets
+
+The tracking script and admin UI logo/favicon are compiled into the binary
+via `go:embed` by default (`assets/divolte_ng.js`,
+`internal/adminui/static/logo.svg`, `internal/adminui/static/favicon.ico`).
+Setting `static_override_dir` to a directory lets a deployment substitute
+its own versions of all three, without rebuilding or forking the image -
+useful for running the same image across environments that need different
+branding or a tracking script with a different filename:
+
+- `{static_override_dir}/{script_name}` overrides the tracking JS body -
+  named after whatever `script_name` is configured, not a fixed name, so a
+  real deployment's own script (which may reference its own filename
+  internally, e.g. to locate its own `<script>` tag in the DOM) works
+  without any templating.
+- `{static_override_dir}/logo.svg` and `{static_override_dir}/favicon.ico`
+  override the admin UI's branding.
+
+Any file not present in the directory falls back to the compiled-in
+default - the directory doesn't need all three. Unset (the default) means
+every asset is served from the embedded defaults, matching prior behavior
+exactly.
 
 Pinned dependency versions (`go.mod`) shouldn't be upgraded casually - the
 Go toolchain is pinned at 1.19, and several deps (`hamba/avro/v2`,

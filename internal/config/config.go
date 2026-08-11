@@ -112,6 +112,17 @@ type Config struct {
 	SchemaFile  string `yaml:"schema_file"`
 	MappingFile string `yaml:"mapping_file"`
 
+	// StaticOverrideDir, if set, is checked at startup/request time for
+	// files that take precedence over the compiled-in go:embed defaults -
+	// {StaticOverrideDir}/{ScriptName} overrides the tracking JS body
+	// (internal/httpserver), and {StaticOverrideDir}/logo.svg and
+	// {StaticOverrideDir}/favicon.ico override the admin UI's branding
+	// (internal/adminui). Lets a deployment mount its own tracking script
+	// and logo/favicon onto an unmodified image, rather than needing its
+	// own fork/build. Empty (the default) disables all three overrides,
+	// matching every existing deployment's behavior exactly.
+	StaticOverrideDir string `yaml:"static_override_dir"`
+
 	Kafka KafkaConfig `yaml:"kafka"`
 	Admin AdminConfig `yaml:"admin"`
 

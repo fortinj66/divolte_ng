@@ -187,6 +187,7 @@ func main() {
 		Prefix:              cfg.Prefix,
 		ScriptName:          cfg.ScriptName,
 		EventSuffix:         cfg.EventSuffix,
+		StaticOverrideDir:   cfg.StaticOverrideDir,
 		MappingCfg:          mappingCfg,
 		Codec:               codec,
 		Sink:                kafkaMgr,
@@ -337,6 +338,7 @@ func main() {
 		SchemaNamespace:  cfg.Admin.SchemaNamespace,
 		SchemaRecordName: cfg.Admin.SchemaRecordName,
 		URIPrefix:        cfg.Admin.URIPrefix,
+		BrandingDir:      cfg.StaticOverrideDir,
 		LDAPAuth:         ldapAuth,
 		LDAPTest: func(servers []string, managerDN, managerPassword, userSearchBase, userSearchFilter string, allowedGroups []string) (string, error) {
 			return ldapauth.TestConnection(ldapauth.Config{

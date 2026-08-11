@@ -14,6 +14,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -139,6 +141,13 @@ type Config struct {
 	// Empty (the default, and what every test uses) means root-mounted,
 	// matching the original behavior - must not have a trailing slash.
 	URIPrefix string
+
+	// BrandingDir, if set, is checked for logo.svg and favicon.ico before
+	// falling back to the compiled-in go:embed defaults - see
+	// internal/config.Config.StaticOverrideDir's doc comment for the full
+	// rationale. Empty (the default, and what every test uses) disables
+	// the override, matching the original behavior exactly.
+	BrandingDir string
 }
 
 // url prepends URIPrefix to a root-relative path, for anything that ends
@@ -146,6 +155,20 @@ type Config struct {
 // URIPrefix doc comment above for why this is needed at all.
 func (h *handlers) url(path string) string {
 	return h.cfg.URIPrefix + path
+}
+
+// serveStaticOverride serves overrideName from cfg.BrandingDir if that
+// directory is set and the file exists there, else falls back to embedFSPath
+// in the compiled-in staticFS - see Config.BrandingDir's doc comment.
+func (h *handlers) serveStaticOverride(c *gin.Context, overrideName, embedFSPath string) {
+	if h.cfg.BrandingDir != "" {
+		overridePath := filepath.Join(h.cfg.BrandingDir, overrideName)
+		if _, err := os.Stat(overridePath); err == nil {
+			c.File(overridePath)
+			return
+		}
+	}
+	c.FileFromFS(embedFSPath, http.FS(staticFS))
 }
 
 // New builds the admin UI's http.Handler, gated behind HTTP basic auth.
@@ -198,10 +221,10 @@ func New(cfg Config) (http.Handler, error) {
 	// ever prompts for credentials.
 	auth := r.Group("/", h.primaryRedirect, h.basicAuth, csrfProtect)
 	auth.GET("/static/logo.svg", func(c *gin.Context) {
-		c.FileFromFS("static/logo.svg", http.FS(staticFS))
+		h.serveStaticOverride(c, "logo.svg", "static/logo.svg")
 	})
 	auth.GET("/static/favicon.ico", func(c *gin.Context) {
-		c.FileFromFS("static/favicon.ico", http.FS(staticFS))
+		h.serveStaticOverride(c, "favicon.ico", "static/favicon.ico")
 	})
 	auth.GET("/settings", h.settingsForm)
 	auth.POST("/settings", h.settingsUpdate)

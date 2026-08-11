@@ -19,6 +19,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -47,6 +49,12 @@ type Config struct {
 	Prefix      string // e.g. "/webstats/"
 	ScriptName  string // e.g. "divolte_ng.js"
 	EventSuffix string // e.g. "csc-event"
+
+	// StaticOverrideDir, if set, is checked for a file named ScriptName -
+	// when present, its content is served instead of the compiled-in
+	// assets.DivolteNGJS. See internal/config.Config.StaticOverrideDir's
+	// doc comment for the full rationale.
+	StaticOverrideDir string
 
 	MappingCfg *mapping.Config
 	Codec      *avroenc.Codec
@@ -109,6 +117,11 @@ func New(cfg Config) (*Server, http.Handler) {
 	s.sendCtx, s.cancelSendCtx = context.WithCancel(context.Background())
 
 	s.jsBody = assets.DivolteNGJS
+	if cfg.StaticOverrideDir != "" {
+		if overrideBody, err := os.ReadFile(filepath.Join(cfg.StaticOverrideDir, cfg.ScriptName)); err == nil {
+			s.jsBody = overrideBody
+		}
+	}
 	sum := sha256.Sum256(s.jsBody)
 	s.jsETag = `"` + hex.EncodeToString(sum[:]) + `"`
 	if gz, ok := gzipBytes(s.jsBody); ok {

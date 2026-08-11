@@ -2,9 +2,12 @@ package httpserver
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -169,6 +172,89 @@ func TestScriptServedWithETagAndGzip(t *testing.T) {
 	defer resp2.Body.Close()
 	if resp2.StatusCode != http.StatusNotModified {
 		t.Errorf("conditional GET status = %d, want 304", resp2.StatusCode)
+	}
+}
+
+func TestScriptOverrideServedWhenPresent(t *testing.T) {
+	dir := t.TempDir()
+	overrideBody := []byte("override-marker-content")
+	if err := os.WriteFile(filepath.Join(dir, "divolte_ng.js"), overrideBody, 0o644); err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+
+	codec, err := avroenc.LoadSchema(testSchema)
+	if err != nil {
+		t.Fatalf("LoadSchema: %v", err)
+	}
+	fp := newFakeProducer()
+	sink := kafkasink.NewWithProducer(fp, "test-topic")
+	mgr := kafkasink.NewSingleSinkManager("test", "avro", sink)
+	srv, handler := New(Config{
+		Prefix: "/webstats/", ScriptName: "divolte_ng.js", EventSuffix: "csc-event",
+		StaticOverrideDir: dir,
+		MappingCfg:        &mapping.Config{},
+		Codec:             codec,
+		Sink:              mgr,
+		Workers:           1, QueueSize: 100, DuplicateMemorySize: 1000,
+	})
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_ = srv.Close(ctx)
+	})
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	resp, err := http.Get(ts.URL + "/webstats/divolte_ng.js")
+	if err != nil {
+		t.Fatalf("GET divolte_ng.js: %v", err)
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if string(body) != string(overrideBody) {
+		t.Errorf("body = %q, want the override content %q", body, overrideBody)
+	}
+}
+
+func TestScriptOverrideFallsBackWhenAbsent(t *testing.T) {
+	// StaticOverrideDir is a real, existing directory, but it has no file
+	// named after ScriptName in it - must fall back to the embedded asset,
+	// not error or serve an empty body.
+	dir := t.TempDir()
+	codec, err := avroenc.LoadSchema(testSchema)
+	if err != nil {
+		t.Fatalf("LoadSchema: %v", err)
+	}
+	fp := newFakeProducer()
+	sink := kafkasink.NewWithProducer(fp, "test-topic")
+	mgr := kafkasink.NewSingleSinkManager("test", "avro", sink)
+	srv, handler := New(Config{
+		Prefix: "/webstats/", ScriptName: "divolte_ng.js", EventSuffix: "csc-event",
+		StaticOverrideDir: dir,
+		MappingCfg:        &mapping.Config{},
+		Codec:             codec,
+		Sink:              mgr,
+		Workers:           1, QueueSize: 100, DuplicateMemorySize: 1000,
+	})
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_ = srv.Close(ctx)
+	})
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	resp, err := http.Get(ts.URL + "/webstats/divolte_ng.js")
+	if err != nil {
+		t.Fatalf("GET divolte_ng.js: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		t.Fatalf("status = %d, want 200", resp.StatusCode)
+	}
+	body, _ := io.ReadAll(resp.Body)
+	if len(body) == 0 {
+		t.Fatal("expected the embedded fallback script body, got empty response")
 	}
 }
 
